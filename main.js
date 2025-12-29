@@ -13,9 +13,10 @@ function createWindow() {
     minWidth: 1000,
     minHeight: 700,
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false,
-      enableRemoteModule: true
+      preload: path.join(__dirname, 'preload-renderer.js'),
+      nodeIntegration: false,
+      contextIsolation: true,
+      enableRemoteModule: false
     },
     frame: true,
     backgroundColor: '#f0f0f3',

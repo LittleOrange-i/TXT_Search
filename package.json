@@ -5,7 +5,10 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder"
+    "build": "electron-builder",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux"
   },
   "keywords": ["electron", "monaco-editor", "search", "replace"],
   "author": "",
@@ -16,21 +19,6 @@
   },
   "dependencies": {
     "monaco-editor": "^0.45.0"
-  },
-  "build": {
-    "appId": "com.txt.search.replace",
-    "productName": "TXT搜索替换工具",
-    "directories": {
-      "output": "dist"
-    },
-    "files": [
-      "**/*",
-      "!dist",
-      "!node_modules"
-    ],
-    "win": {
-      "target": ["nsis"],
-      "icon": "assets/icon.ico"
-    }
   }
 }
+

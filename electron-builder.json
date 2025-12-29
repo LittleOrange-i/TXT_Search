@@ -1,0 +1,43 @@
+{
+  "appId": "com.txt.search.replace",
+  "productName": "TXT搜索替换工具",
+  "directories": {
+    "output": "dist",
+    "buildResources": "assets"
+  },
+  "files": [
+    "main.js",
+    "renderer.js",
+    "preload-renderer.js",
+    "search-worker.js",
+    "index.html",
+    "styles.css",
+    "assets/**/*",
+    "node_modules/monaco-editor/**/*"
+  ],
+  "win": {
+    "target": [
+      {
+        "target": "nsis",
+        "arch": ["x64"]
+      }
+    ],
+    "icon": "assets/icon.ico"
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true
+  },
+  "mac": {
+    "target": ["dmg"],
+    "icon": "assets/icon.png",
+    "category": "public.app-category.utilities"
+  },
+  "linux": {
+    "target": ["AppImage"],
+    "icon": "assets/icon.png",
+    "category": "Utility"
+  }
+}

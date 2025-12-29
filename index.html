@@ -229,11 +229,9 @@
     </div>
   </div>
 
-  <!-- 先加载预加载脚本，初始化 Electron IPC -->
-  <script src="preload-renderer.js"></script>
-  <!-- 然后加载 Monaco Editor -->
+  <!-- 加载 Monaco Editor -->
   <script src="node_modules/monaco-editor/min/vs/loader.js"></script>
-  <!-- 最后加载主渲染进程脚本 -->
+  <!-- 加载主渲染进程脚本 -->
   <script src="renderer.js"></script>
 </body>
 </html>
