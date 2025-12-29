@@ -1,0 +1,36 @@
+{
+  "name": "TXT搜索替换工具",
+  "version": "1.0.0",
+  "description": "一个优雅的TXT文件搜索替换工具",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "keywords": ["electron", "monaco-editor", "search", "replace"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  },
+  "dependencies": {
+    "monaco-editor": "^0.45.0"
+  },
+  "build": {
+    "appId": "com.txt.search.replace",
+    "productName": "TXT搜索替换工具",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "**/*",
+      "!dist",
+      "!node_modules"
+    ],
+    "win": {
+      "target": ["nsis"],
+      "icon": "assets/icon.ico"
+    }
+  }
+}
