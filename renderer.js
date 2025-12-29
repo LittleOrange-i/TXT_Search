@@ -31,6 +31,12 @@ let customConfirmModal, confirmTitle, confirmMessage, confirmOkBtn, confirmCance
 // 输入框映射记录数组（仅记录关键字和替换文本的对应关系）
 let mappingHistory = [];
 
+// 忽略的结果字段数组（存储被忽略的结果字段，用于过滤搜索结果）
+let ignoredResultFields = [];
+
+// 快捷字段数组（存储常用的替换文本，用于快速选择）
+let quickFields = [];
+
 // 等待DOM加载完成
 document.addEventListener('DOMContentLoaded', () => {
   // 获取DOM元素
@@ -691,8 +697,29 @@ function renderResultItem(group, displayIndex) {
   replaceInputField.addEventListener('focus', (e) => e.stopPropagation());
   replaceInputField.addEventListener('input', (e) => e.stopPropagation());
   
+  // 创建快捷字段按钮
+  const quickFieldBtn = document.createElement('button');
+  quickFieldBtn.className = 'neumorphic-btn quick-field-btn';
+  quickFieldBtn.innerHTML = `
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <polyline points="20 6 9 17 4 12"></polyline>
+    </svg>
+  `;
+  quickFieldBtn.title = '选择快捷字段';
+  quickFieldBtn.style.cssText = `
+    margin-left: 8px;
+    padding: 6px 10px;
+    min-width: unset;
+    height: 32px;
+  `;
+  quickFieldBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    showQuickFieldMenu(replaceInputField, quickFieldBtn);
+  });
+  
   replaceInputDiv.appendChild(replaceLabel);
   replaceInputDiv.appendChild(replaceInputField);
+  replaceInputDiv.appendChild(quickFieldBtn);
   
   const buttonsDiv = document.createElement('div');
   buttonsDiv.className = 'result-buttons';
@@ -826,9 +853,28 @@ function handleSingleReplace(group, replaceText, resultItem, groupIndex) {
   }
 }
 
-// 处理忽略（优化性能，避免卡顿，支持队列补充）
+// 处理忽略（优化性能，避免卡顿，支持队列补充，记录忽略的结果字段）
 function handleIgnore(resultItem, groupIndex) {
   if (resultItem.dataset.status !== 'pending') return; // 已处理过的不再处理
+  
+  // 获取该组的结果字段并添加到忽略列表
+  const groupId = parseInt(resultItem.dataset.groupId);
+  if (groupId >= 0 && groupId < renderedGroups.length) {
+    const group = renderedGroups[groupId];
+    const resultField = group.resultField;
+    
+    // 提取前3位+关键字+后3位作为忽略字段
+    const keyword = currentSearchKeyword;
+    const beforeChars = group.results[0].beforeChars;
+    const afterChars = group.results[0].afterChars;
+    const ignoreField = beforeChars + keyword + afterChars;
+    
+    // 添加到忽略列表（去重）
+    if (!ignoredResultFields.includes(ignoreField)) {
+      ignoredResultFields.push(ignoreField);
+      console.log(`[忽略记录] 已添加忽略字段: "${ignoreField}"`);
+    }
+  }
   
   resultItem.dataset.status = 'ignored';
   ignoredCount++;
@@ -946,13 +992,19 @@ function updateMappingHistory(from, to, count) {
   }
 }
 
-// 按结果字段分组搜索结果（相同的前后2字符+关键字归为一组）
+// 按结果字段分组搜索结果（相同的前后2字符+关键字归为一组，过滤忽略的字段）
 function groupResultsByField() {
   const groups = [];
   const fieldMap = new Map();
   
   searchResults.forEach(result => {
     const fieldKey = result.resultField;
+    
+    // 检查该结果字段是否在忽略列表中
+    if (ignoredResultFields.includes(fieldKey)) {
+      console.log(`[过滤] 跳过被忽略的字段: "${fieldKey}"`);
+      return; // 跳过被忽略的结果
+    }
     
     if (fieldMap.has(fieldKey)) {
       fieldMap.get(fieldKey).results.push(result);
@@ -1407,4 +1459,240 @@ function customConfirm(message, title = '确认') {
     confirmCancelBtn.addEventListener('click', handleCancel);
     closeConfirmModal.addEventListener('click', handleCancel);
   });
+}
+
+// 显示快捷字段菜单
+function showQuickFieldMenu(inputField, buttonElement) {
+  // 移除已存在的菜单
+  const existingMenu = document.querySelector('.quick-field-menu');
+  if (existingMenu) {
+    existingMenu.remove();
+  }
+  
+  // 如果快捷字段为空，显示提示并允许添加
+  if (quickFields.length === 0) {
+    const menu = document.createElement('div');
+    menu.className = 'quick-field-menu';
+    menu.style.cssText = `
+      position: absolute;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      padding: 12px;
+      z-index: 10000;
+      min-width: 200px;
+      max-width: 300px;
+    `;
+    
+    const hint = document.createElement('div');
+    hint.style.cssText = 'color: #718096; font-size: 13px; margin-bottom: 8px;';
+    hint.textContent = '暂无快捷字段';
+    
+    const addInput = document.createElement('input');
+    addInput.type = 'text';
+    addInput.placeholder = '输入并回车添加';
+    addInput.style.cssText = `
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      font-size: 13px;
+      box-sizing: border-box;
+    `;
+    
+    addInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        const value = addInput.value.trim();
+        if (value && !quickFields.includes(value)) {
+          quickFields.push(value);
+          showNotification('已添加快捷字段');
+          menu.remove();
+        }
+      }
+    });
+    
+    menu.appendChild(hint);
+    menu.appendChild(addInput);
+    
+    // 定位菜单
+    const rect = buttonElement.getBoundingClientRect();
+    menu.style.top = (rect.bottom + 5) + 'px';
+    menu.style.left = rect.left + 'px';
+    
+    document.body.appendChild(menu);
+    addInput.focus();
+    
+    // 点击外部关闭
+    setTimeout(() => {
+      document.addEventListener('click', function closeMenu(e) {
+        if (!menu.contains(e.target) && e.target !== buttonElement) {
+          menu.remove();
+          document.removeEventListener('click', closeMenu);
+        }
+      });
+    }, 0);
+    
+    return;
+  }
+  
+  // 创建快捷字段菜单
+  const menu = document.createElement('div');
+  menu.className = 'quick-field-menu';
+  menu.style.cssText = `
+    position: absolute;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    padding: 8px;
+    z-index: 10000;
+    min-width: 200px;
+    max-width: 300px;
+    max-height: 300px;
+    overflow-y: auto;
+  `;
+  
+  // 添加标题
+  const header = document.createElement('div');
+  header.style.cssText = `
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: bold;
+    color: #2d3748;
+    border-bottom: 1px solid #e2e8f0;
+    margin-bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  `;
+  header.innerHTML = `
+    <span>快捷字段</span>
+    <button style="
+      background: none;
+      border: none;
+      color: #4299e1;
+      cursor: pointer;
+      font-size: 12px;
+      padding: 2px 6px;
+    " onclick="this.parentElement.parentElement.querySelector('.add-quick-field-input').style.display='block'; this.style.display='none';">+ 添加</button>
+  `;
+  
+  menu.appendChild(header);
+  
+  // 添加输入框（初始隐藏）
+  const addInput = document.createElement('input');
+  addInput.type = 'text';
+  addInput.className = 'add-quick-field-input';
+  addInput.placeholder = '输入并回车添加';
+  addInput.style.cssText = `
+    width: calc(100% - 16px);
+    padding: 8px;
+    margin: 4px 8px 8px;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    font-size: 13px;
+    box-sizing: border-box;
+    display: none;
+  `;
+  
+  addInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      const value = addInput.value.trim();
+      if (value && !quickFields.includes(value)) {
+        quickFields.push(value);
+        showNotification('已添加快捷字段');
+        menu.remove();
+        // 重新显示菜单
+        setTimeout(() => showQuickFieldMenu(inputField, buttonElement), 100);
+      }
+    }
+  });
+  
+  addInput.addEventListener('click', (e) => e.stopPropagation());
+  
+  menu.appendChild(addInput);
+  
+  // 添加快捷字段项
+  quickFields.forEach((field, index) => {
+    const item = document.createElement('div');
+    item.style.cssText = `
+      padding: 10px 12px;
+      cursor: pointer;
+      border-radius: 4px;
+      font-size: 13px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: background 0.2s;
+    `;
+    
+    const text = document.createElement('span');
+    text.textContent = field;
+    text.style.cssText = 'flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;';
+    
+    const deleteBtn = document.createElement('button');
+    deleteBtn.innerHTML = '×';
+    deleteBtn.style.cssText = `
+      background: none;
+      border: none;
+      color: #e53e3e;
+      cursor: pointer;
+      font-size: 18px;
+      padding: 0 4px;
+      margin-left: 8px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    `;
+    deleteBtn.title = '删除';
+    
+    deleteBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      quickFields.splice(index, 1);
+      showNotification('已删除快捷字段');
+      menu.remove();
+      // 重新显示菜单
+      if (quickFields.length > 0) {
+        setTimeout(() => showQuickFieldMenu(inputField, buttonElement), 100);
+      }
+    });
+    
+    item.appendChild(text);
+    item.appendChild(deleteBtn);
+    
+    item.addEventListener('mouseenter', () => {
+      item.style.background = '#f7fafc';
+      deleteBtn.style.opacity = '1';
+    });
+    
+    item.addEventListener('mouseleave', () => {
+      item.style.background = '';
+      deleteBtn.style.opacity = '0';
+    });
+    
+    item.addEventListener('click', (e) => {
+      if (e.target !== deleteBtn) {
+        inputField.value = field;
+        menu.remove();
+        showNotification('已填入快捷字段');
+      }
+    });
+    
+    menu.appendChild(item);
+  });
+  
+  // 定位菜单
+  const rect = buttonElement.getBoundingClientRect();
+  menu.style.top = (rect.bottom + 5) + 'px';
+  menu.style.left = rect.left + 'px';
+  
+  document.body.appendChild(menu);
+  
+  // 点击外部关闭
+  setTimeout(() => {
+    document.addEventListener('click', function closeMenu(e) {
+      if (!menu.contains(e.target) && e.target !== buttonElement) {
+        menu.remove();
+        document.removeEventListener('click', closeMenu);
+      }
+    });
+  }, 0);
 }

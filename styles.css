@@ -546,6 +546,7 @@ input, textarea, .neumorphic-input, #editor, .result-replace-input {
   align-items: center;
   gap: 8px;
   pointer-events: auto !important;
+  flex-wrap: nowrap;
 }
 
 .result-replace-input-group label {
@@ -999,6 +1000,67 @@ input, textarea, .neumorphic-input, #editor, .result-replace-input {
 .paragraph-content::-webkit-scrollbar-thumb:hover {
   background: #8d9db3;
 }
+
+/* 快捷字段按钮样式 */
+.quick-field-btn {
+  background: linear-gradient(135deg, #4299e1, #3182ce) !important;
+  color: white !important;
+  box-shadow: 
+    4px 4px 8px var(--shadow-dark),
+    -4px -4px 8px var(--shadow-light) !important;
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+
+.quick-field-btn:hover {
+  background: linear-gradient(135deg, #3182ce, #2c5282) !important;
+  transform: translateY(-1px);
+  box-shadow: 
+    6px 6px 12px var(--shadow-dark),
+    -6px -6px 12px var(--shadow-light) !important;
+}
+
+.quick-field-btn:active {
+  transform: translateY(0);
+  box-shadow: 
+    inset 2px 2px 4px rgba(0, 0, 0, 0.2),
+    inset -2px -2px 4px rgba(255, 255, 255, 0.1) !important;
+}
+
+/* 快捷字段菜单样式 */
+.quick-field-menu {
+  animation: quickFieldMenuSlide 0.2s ease-out;
+}
+
+@keyframes quickFieldMenuSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.quick-field-menu::-webkit-scrollbar {
+  width: 6px;
+}
+
+.quick-field-menu::-webkit-scrollbar-track {
+  background: #f7fafc;
+  border-radius: 3px;
+}
+
+.quick-field-menu::-webkit-scrollbar-thumb {
+  background: var(--shadow-dark);
+  border-radius: 3px;
+}
+
+.quick-field-menu::-webkit-scrollbar-thumb:hover {
+  background: #8d9db3;
+}
+
 
 
 
