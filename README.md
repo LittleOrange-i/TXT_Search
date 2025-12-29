@@ -18,6 +18,7 @@
 
 无论是处理大型日志文件、批量修改配置文件，还是进行文本数据清洗，这款工具都能让你事半功倍！
 
+**如果你不是PC用户或者想随时随地使用**，请访问同款 [Android 项目](https://github.com/LittleOrange-i/TXT_Search_ForAndroid)
 ---
 
 ## ✨ 核心功能
