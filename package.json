@@ -1,5 +1,5 @@
 {
-  "name": "TXT搜索替换工具",
+  "name": "TXT_Search_Tool",
   "version": "1.0.0",
   "description": "一个优雅的TXT文件搜索替换工具",
   "main": "main.js",
