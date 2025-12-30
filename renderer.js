@@ -976,20 +976,26 @@ function reorderResultItems() {
 }
 
 // 检查是否所有项都已处理完成（考虑队列）
-function checkAllCompleted() {
+// skipAutoClose: 是否跳过自动关闭（用于二次过滤等批量操作）
+function checkAllCompleted(skipAutoClose = false) {
   const groupedResults = groupResultsByField();
   const totalGroups = groupedResults.length;
   const processedGroups = replacedCount + ignoredCount;
   
   if (processedGroups === totalGroups) {
-    showNotification('✓ 已完成所有项的处理');
-    // 自动关闭弹窗，不再显示确认对话框
-    setTimeout(() => {
-      resultsModal.classList.remove('show');
-      // 清空队列
-      renderQueue = [];
-      renderedGroups = [];
-    }, 1000);
+    if (skipAutoClose) {
+      // 批量操作时不自动关闭，只显示提示
+      showNotification('✓ 已完成所有项的处理，可以关闭弹窗');
+    } else {
+      // 正常单个操作时自动关闭
+      showNotification('✓ 已完成所有项的处理');
+      setTimeout(() => {
+        resultsModal.classList.remove('show');
+        // 清空队列
+        renderQueue = [];
+        renderedGroups = [];
+      }, 1000);
+    }
   }
 }
 
@@ -1882,16 +1888,21 @@ async function showSecondaryFilter() {
   
   const keyword = filterKeyword.trim();
   let matchedCount = 0;
+  const elementsToRemove = []; // 批量收集需要处理的元素
   
-  // 执行批量忽略
+  // 执行批量忽略（只收集，不立即处理）
   allPendingGroups.forEach((item) => {
     const resultField = item.group.resultField;
     const context = item.group.results[0].context;
     
     if (resultField.includes(keyword) || context.includes(keyword)) {
       if (item.type === 'rendered') {
-        // 已渲染的：调用忽略函数
-        handleIgnore(item.element, item.groupId);
+        // 已渲染的：收集元素
+        elementsToRemove.push({
+          element: item.element,
+          groupId: item.groupId,
+          group: item.group
+        });
       } else {
         // 队列中的：添加到忽略列表
         const ignoreField = item.group.resultField;
@@ -1904,6 +1915,37 @@ async function showSecondaryFilter() {
       matchedCount++;
     }
   });
+  
+  // 批量处理DOM操作（无动画，快速处理）
+  if (elementsToRemove.length > 0) {
+    requestAnimationFrame(() => {
+      elementsToRemove.forEach(({ element, groupId, group }) => {
+        // 标记为已忽略
+        element.dataset.status = 'ignored';
+        
+        // 获取结果字段并添加到忽略列表
+        const keyword = currentSearchKeyword;
+        const ignoreField = group.resultField;
+        
+        if (!ignoredResultFields.includes(ignoreField)) {
+          ignoredResultFields.push(ignoreField);
+        }
+        
+        // 直接隐藏，不使用动画
+        element.style.display = 'none';
+        
+        ignoredCount++;
+      });
+      
+      // 更新忽略计数显示
+      if (ignoredCountEl) {
+        ignoredCountEl.textContent = ignoredCount;
+      }
+      
+      // 重新排序可见项
+      reorderResultItems();
+    });
+  }
   
   // 更新队列（移除被忽略的项）
   if (renderQueue.length > 0) {
@@ -1919,15 +1961,21 @@ async function showSecondaryFilter() {
     
     renderQueue = remainingQueue;
     updateQueueDisplay();
-    
-    // 更新忽略计数显示
-    if (ignoredCountEl) {
-      ignoredCountEl.textContent = ignoredCount;
-    }
   }
   
   if (matchedCount > 0) {
     showNotification(`已批量忽略 ${matchedCount} 个匹配项`);
+    
+    // 检查是否所有项都被处理完成
+    const remainingPendingCount = Array.from(resultsList.querySelectorAll('.result-item'))
+      .filter(item => item.dataset.status === 'pending' && item.style.display !== 'none').length;
+    
+    if (remainingPendingCount === 0 && renderQueue.length === 0) {
+      // 所有项都已处理完成，显示提示但不自动关闭
+      setTimeout(() => {
+        showNotification('✓ 所有搜索结果已处理完成，可以关闭弹窗');
+      }, 500);
+    }
   } else {
     await customAlert(`未找到包含 "${keyword}" 的结果`);
   }
