@@ -27,6 +27,8 @@ let compareCount, compareOldText, compareNewText, comparisonList;
 let paragraphModal, closeParagraphModal, prevParagraph, currentParagraph, nextParagraph; // 段落详情弹窗元素
 let customAlertModal, alertTitle, alertMessage, alertConfirmBtn, closeAlertModal; // 自定义Alert
 let customConfirmModal, confirmTitle, confirmMessage, confirmOkBtn, confirmCancelBtn, closeConfirmModal; // 自定义Confirm
+let customPromptModal, promptTitle, promptMessage, promptInput, promptOkBtn, promptCancelBtn, closePromptModal; // 自定义Prompt
+let secondaryFilterBtn; // 二次过滤按钮
 
 // 输入框映射记录数组（仅记录关键字和替换文本的对应关系）
 let mappingHistory = [];
@@ -92,6 +94,18 @@ document.addEventListener('DOMContentLoaded', () => {
   confirmOkBtn = document.getElementById('confirmOkBtn');
   confirmCancelBtn = document.getElementById('confirmCancelBtn');
   closeConfirmModal = document.getElementById('closeConfirmModal');
+  
+  // 自定义Prompt弹窗元素
+  customPromptModal = document.getElementById('customPromptModal');
+  promptTitle = document.getElementById('promptTitle');
+  promptMessage = document.getElementById('promptMessage');
+  promptInput = document.getElementById('promptInput');
+  promptOkBtn = document.getElementById('promptOkBtn');
+  promptCancelBtn = document.getElementById('promptCancelBtn');
+  closePromptModal = document.getElementById('closePromptModal');
+  
+  // 二次过滤按钮
+  secondaryFilterBtn = document.getElementById('secondaryFilterBtn');
 
   // 初始化Monaco编辑器
   initMonacoEditor();
@@ -215,6 +229,11 @@ function bindEventListeners() {
   closeParagraphModal.addEventListener('click', () => {
     paragraphModal.classList.remove('show');
   });
+  
+  // 二次过滤按钮
+  if (secondaryFilterBtn) {
+    secondaryFilterBtn.addEventListener('click', showSecondaryFilter);
+  }
   
   // 删除确认替换和取消按钮的事件监听（历史记录只查看，不操作）
   // confirmReplaceBtn 和 cancelReplaceBtn 按钮可以隐藏或删除
@@ -614,6 +633,14 @@ function showSearchResults() {
   });
   
   resultsModal.classList.add('show');
+  
+  // 聚焦到弹窗容器，使快捷键立即生效
+  setTimeout(() => {
+    if (resultsModal) {
+      resultsModal.focus();
+      resultsModal.setAttribute('tabindex', '-1'); // 允许聚焦
+    }
+  }, 100);
   
   // 确保输入框可用
   ensureInputsEnabled();
@@ -1307,19 +1334,25 @@ function formatTime(date) {
 // 键盘快捷键处理函数
 function handleKeyboardShortcuts(e) {
   // Ctrl+S 保存
-  if (e.ctrlKey && e.key === 's') {
+  if (e.ctrlKey && e.key.toLowerCase() === 's') {
     e.preventDefault();
     if (saveFileBtn && !saveFileBtn.disabled) {
       saveFileBtn.click();
     }
   }
   
-  // Ctrl+F 搜索
-  if (e.ctrlKey && e.key === 'f') {
+  // Ctrl+F 搜索或二次过滤（根据搜索结果弹窗状态决定）
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
     e.preventDefault();
-    if (searchInput) {
-      searchInput.focus();
-      searchInput.select();
+    // 如果搜索结果弹窗已打开，触发二次过滤
+    if (resultsModal && resultsModal.classList.contains('show')) {
+      showSecondaryFilter();
+    } else {
+      // 否则聚焦到搜索框
+      if (searchInput) {
+        searchInput.focus();
+        searchInput.select();
+      }
     }
   }
   
@@ -1339,6 +1372,9 @@ function handleKeyboardShortcuts(e) {
     }
     if (customConfirmModal && customConfirmModal.classList.contains('show')) {
       customConfirmModal.classList.remove('show');
+    }
+    if (customPromptModal && customPromptModal.classList.contains('show')) {
+      customPromptModal.classList.remove('show');
     }
   }
 }
@@ -1460,6 +1496,71 @@ function customConfirm(message, title = '确认') {
     closeConfirmModal.addEventListener('click', handleCancel);
   });
 }
+
+// 自定义Prompt函数（替代原生prompt）
+// options: { onInput: (value) => string } - 可选的输入回调函数，返回提示文本
+function customPrompt(message, defaultValue = '', title = '输入', options = {}) {
+  return new Promise((resolve) => {
+    promptTitle.textContent = title;
+    promptMessage.textContent = message;
+    promptInput.value = defaultValue;
+    customPromptModal.classList.add('show');
+    
+    // 聚焦并选中输入框
+    setTimeout(() => {
+      promptInput.focus();
+      promptInput.select();
+    }, 100);
+    
+    // 实时输入回调
+    const handleInput = (e) => {
+      if (options.onInput && typeof options.onInput === 'function') {
+        const hint = options.onInput(e.target.value);
+        if (hint) {
+          // 更新提示信息（在消息末尾添加）
+          const originalMessage = message.split('\n\n匹配项:')[0]; // 移除旧的匹配信息
+          promptMessage.textContent = originalMessage + '\n\n' + hint;
+        }
+      }
+    };
+    
+    const handleOk = () => {
+      const value = promptInput.value;
+      customPromptModal.classList.remove('show');
+      cleanup();
+      resolve(value);
+    };
+    
+    const handleCancel = () => {
+      customPromptModal.classList.remove('show');
+      cleanup();
+      resolve(null);
+    };
+    
+    const handleEnter = (e) => {
+      if (e.key === 'Enter') {
+        handleOk();
+      }
+    };
+    
+    const cleanup = () => {
+      promptOkBtn.removeEventListener('click', handleOk);
+      promptCancelBtn.removeEventListener('click', handleCancel);
+      closePromptModal.removeEventListener('click', handleCancel);
+      promptInput.removeEventListener('keypress', handleEnter);
+      promptInput.removeEventListener('input', handleInput);
+    };
+    
+    promptOkBtn.addEventListener('click', handleOk);
+    promptCancelBtn.addEventListener('click', handleCancel);
+    closePromptModal.addEventListener('click', handleCancel);
+    promptInput.addEventListener('keypress', handleEnter);
+    if (options.onInput) {
+      promptInput.addEventListener('input', handleInput);
+    }
+  });
+}
+
 
 // 显示快捷字段菜单
 function showQuickFieldMenu(inputField, buttonElement) {
@@ -1696,3 +1797,141 @@ function showQuickFieldMenu(inputField, buttonElement) {
     });
   }, 0);
 }
+
+// 显示二次过滤对话框
+// 功能：在搜索结果中进行二次搜索，将匹配的结果批量忽略（包含已渲染和未渲染的）
+async function showSecondaryFilter() {
+  if (searchResults.length === 0) {
+    await customAlert('没有可过滤的搜索结果');
+    return;
+  }
+  
+  // 计算总的待处理项数量（包括队列中的）
+  const renderedPendingCount = Array.from(resultsList.querySelectorAll('.result-item'))
+    .filter(item => item.dataset.status === 'pending' && item.style.display !== 'none').length;
+  const totalPendingCount = renderedPendingCount + renderQueue.length;
+  
+  if (totalPendingCount === 0) {
+    await customAlert('没有待处理的搜索结果');
+    return;
+  }
+  
+  // 缓存所有待处理的结果组（用于实时匹配计数）
+  const allPendingGroups = [];
+  
+  // 收集已渲染的待处理组
+  const resultItems = Array.from(resultsList.querySelectorAll('.result-item'))
+    .filter(item => item.dataset.status === 'pending' && item.style.display !== 'none');
+  
+  resultItems.forEach((resultItem) => {
+    const groupId = parseInt(resultItem.dataset.groupId);
+    if (groupId >= 0 && groupId < renderedGroups.length) {
+      allPendingGroups.push({
+        type: 'rendered',
+        group: renderedGroups[groupId],
+        element: resultItem,
+        groupId: groupId
+      });
+    }
+  });
+  
+  // 收集队列中的组
+  renderQueue.forEach((group) => {
+    allPendingGroups.push({
+      type: 'queued',
+      group: group
+    });
+  });
+  
+  const originalMessage = `请输入要二次过滤的关键字：(快捷键 Ctrl+F / command + F)\n(匹配到的结果将被批量忽略)\n\n` +
+    `当前有 ${totalPendingCount} 个待处理项\n` +
+    `(${renderedPendingCount} 个已显示，${renderQueue.length} 个在队列中)`;
+  
+  // 使用自定义输入对话框，带实时匹配计数
+  const filterKeyword = await customPrompt(
+    originalMessage,
+    '',
+    '二次过滤',
+    {
+      onInput: (value) => {
+        if (!value || value.trim() === '') {
+          return '匹配项: 输入关键字后显示匹配数量';
+        }
+        
+        const keyword = value.trim();
+        let matchCount = 0;
+        
+        // 统计匹配数量
+        allPendingGroups.forEach((item) => {
+          const resultField = item.group.resultField;
+          const context = item.group.results[0].context;
+          
+          if (resultField.includes(keyword) || context.includes(keyword)) {
+            matchCount++;
+          }
+        });
+        
+        return `匹配项: 将批量忽略 ${matchCount} 个结果`;
+      }
+    }
+  );
+  
+  if (!filterKeyword || filterKeyword.trim() === '') {
+    return; // 用户取消或输入为空
+  }
+  
+  const keyword = filterKeyword.trim();
+  let matchedCount = 0;
+  
+  // 执行批量忽略
+  allPendingGroups.forEach((item) => {
+    const resultField = item.group.resultField;
+    const context = item.group.results[0].context;
+    
+    if (resultField.includes(keyword) || context.includes(keyword)) {
+      if (item.type === 'rendered') {
+        // 已渲染的：调用忽略函数
+        handleIgnore(item.element, item.groupId);
+      } else {
+        // 队列中的：添加到忽略列表
+        const ignoreField = item.group.resultField;
+        if (!ignoredResultFields.includes(ignoreField)) {
+          ignoredResultFields.push(ignoreField);
+          console.log(`[二次过滤] 已添加忽略字段: "${ignoreField}"`);
+        }
+        ignoredCount++; // 增加忽略计数
+      }
+      matchedCount++;
+    }
+  });
+  
+  // 更新队列（移除被忽略的项）
+  if (renderQueue.length > 0) {
+    const remainingQueue = [];
+    renderQueue.forEach((group) => {
+      const resultField = group.resultField;
+      const context = group.results[0].context;
+      
+      if (!resultField.includes(keyword) && !context.includes(keyword)) {
+        remainingQueue.push(group);
+      }
+    });
+    
+    renderQueue = remainingQueue;
+    updateQueueDisplay();
+    
+    // 更新忽略计数显示
+    if (ignoredCountEl) {
+      ignoredCountEl.textContent = ignoredCount;
+    }
+  }
+  
+  if (matchedCount > 0) {
+    showNotification(`已批量忽略 ${matchedCount} 个匹配项`);
+  } else {
+    await customAlert(`未找到包含 "${keyword}" 的结果`);
+  }
+}
+
+
+

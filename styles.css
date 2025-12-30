@@ -360,6 +360,37 @@ input, textarea, .neumorphic-input, #editor, .result-replace-input {
   transform: rotate(90deg);
 }
 
+/* 图标按钮样式（用于二次过滤等功能） */
+.icon-btn {
+  background: var(--bg-color);
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-color);
+  box-shadow: 
+    4px 4px 8px var(--shadow-dark),
+    -4px -4px 8px var(--shadow-light);
+  transition: var(--transition);
+}
+
+.icon-btn:hover {
+  color: var(--primary-color);
+  box-shadow: 
+    inset 2px 2px 4px var(--shadow-dark),
+    inset -2px -2px 4px var(--shadow-light);
+}
+
+.icon-btn:active {
+  box-shadow: 
+    inset 3px 3px 6px var(--shadow-dark),
+    inset -3px -3px 6px var(--shadow-light);
+}
+
 .modal-body {
   flex: 1;
   display: flex;
