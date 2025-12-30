@@ -130,10 +130,14 @@ function initMonacoEditor() {
       scrollBeyondLastLine: false,
       automaticLayout: true,
       minimap: {
-        enabled: true
+        enabled: false  // 禁用侧边预览
       },
       wordWrap: 'on',
-      readOnly: false
+      readOnly: false,
+      unicodeHighlight: {
+        ambiguousCharacters: false,  // 禁用不可见Unicode字符提示
+        invisibleCharacters: false   // 禁用不可见字符高亮
+      }
     });
 
     // 监听编辑器内容变化
