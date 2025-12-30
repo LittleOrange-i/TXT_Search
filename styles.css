@@ -1,4 +1,13 @@
 /* 新拟态风格全局样式 */
+
+/* 加载阿里巴巴普惠体字体 */
+@font-face {
+  font-family: 'Alibaba PuHuiTi';
+  src: url('./assets/AlibabaPuHuiTi-3-55-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
 * {
   margin: 0;
   padding: 0;

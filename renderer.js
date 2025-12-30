@@ -125,6 +125,7 @@ function initMonacoEditor() {
       language: 'plaintext',
       theme: 'vs',
       fontSize: 14,
+      fontFamily: 'Alibaba PuHuiTi, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif',  // 设置编辑器字体为阿里巴巴普惠体
       lineNumbers: 'on',
       roundedSelection: true,
       scrollBeyondLastLine: false,
