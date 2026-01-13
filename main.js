@@ -34,8 +34,8 @@ function createWindow() {
     mainWindow.show();
   });
 
-  // 打开开发者工具（开发时使用，调试完成后可以注释掉）
-  mainWindow.webContents.openDevTools();
+  // // 打开开发者工具（开发时使用，调试完成后可以注释掉）
+  // mainWindow.webContents.openDevTools();
 }
 
 app.whenReady().then(() => {
