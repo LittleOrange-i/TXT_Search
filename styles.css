@@ -92,6 +92,11 @@ input, textarea, .neumorphic-input, #editor, .result-replace-input {
   text-align: center;
 }
 
+.toolbar-right {
+  display: flex;
+  gap: 12px;
+}
+
 .file-path {
   color: var(--text-dark);
   font-weight: 500;
@@ -687,6 +692,35 @@ input, textarea, .neumorphic-input, #editor, .result-replace-input {
   background: #8d9db3;
 }
 
+
+
+
+
+
+/* 切换按钮样式 */
+.toggle-btn {
+  position: relative;
+}
+
+.toggle-btn.active {
+  background: linear-gradient(135deg, #48bb78, #38a169);
+  color: white;
+  box-shadow: 
+    6px 6px 12px var(--shadow-dark),
+    -6px -6px 12px var(--shadow-light),
+    inset 0 0 0 rgba(255, 255, 255, 0.1);
+}
+
+.toggle-btn.active svg {
+  color: white;
+}
+
+.toggle-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+
+
 /* 保留原有的modal-body滚动条样式（兼容其他使用场景） */
 .modal-body::-webkit-scrollbar {
   width: 8px;
@@ -705,6 +739,33 @@ input, textarea, .neumorphic-input, #editor, .result-replace-input {
 .modal-body::-webkit-scrollbar-thumb:hover {
   background: #8d9db3;
 }
+
+
+
+
+/* 切换按钮样式 */
+.toggle-btn {
+  position: relative;
+}
+
+.toggle-btn.active {
+  background: linear-gradient(135deg, #48bb78, #38a169);
+  color: white;
+  box-shadow: 
+    6px 6px 12px var(--shadow-dark),
+    -6px -6px 12px var(--shadow-light),
+    inset 0 0 0 rgba(255, 255, 255, 0.1);
+}
+
+.toggle-btn.active svg {
+  color: white;
+}
+
+.toggle-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+
 
 /* 响应式调整 */
 @media (max-width: 1200px) {
@@ -952,6 +1013,33 @@ input, textarea, .neumorphic-input, #editor, .result-replace-input {
   background: #8d9db3;
 }
 
+
+
+
+/* 切换按钮样式 */
+.toggle-btn {
+  position: relative;
+}
+
+.toggle-btn.active {
+  background: linear-gradient(135deg, #48bb78, #38a169);
+  color: white;
+  box-shadow: 
+    6px 6px 12px var(--shadow-dark),
+    -6px -6px 12px var(--shadow-light),
+    inset 0 0 0 rgba(255, 255, 255, 0.1);
+}
+
+.toggle-btn.active svg {
+  color: white;
+}
+
+.toggle-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+
+
 /* 段落详情弹窗样式 */
 .paragraph-container {
   display: flex;
@@ -1013,14 +1101,31 @@ input, textarea, .neumorphic-input, #editor, .result-replace-input {
   box-shadow: inset 2px 2px 6px rgba(163, 177, 198, 0.2);
 }
 
-/* 段落中的关键字标记为红色 */
+/* 段落中的关键字标记（黄色背景高亮） */
 .paragraph-content .keyword-highlight {
-  color: #e53e3e;
+  color: #2d3748;
   font-weight: bold;
-  background: rgba(229, 62, 62, 0.15);
+  background: #ffeb3b;
   padding: 2px 4px;
-  border-radius: 3px;
-  border: 1px solid rgba(229, 62, 62, 0.3);
+  border-radius: 2px;
+}
+
+/* 段落中的映射记录 from 字段标记（橙黄色背景高亮） */
+.paragraph-content .mapping-from-highlight {
+  color: #2d3748;
+  font-weight: bold;
+  background: #ffa726;
+  padding: 2px 4px;
+  border-radius: 2px;
+}
+
+/* 段落中的映射记录 to 字段标记（绿色背景高亮） */
+.paragraph-content .mapping-to-highlight {
+  color: #2d3748;
+  font-weight: bold;
+  background: #66bb6a;
+  padding: 2px 4px;
+  border-radius: 2px;
 }
 
 .paragraph-content::-webkit-scrollbar {
@@ -1040,6 +1145,32 @@ input, textarea, .neumorphic-input, #editor, .result-replace-input {
 .paragraph-content::-webkit-scrollbar-thumb:hover {
   background: #8d9db3;
 }
+
+
+
+/* 切换按钮样式 */
+.toggle-btn {
+  position: relative;
+}
+
+.toggle-btn.active {
+  background: linear-gradient(135deg, #48bb78, #38a169);
+  color: white;
+  box-shadow: 
+    6px 6px 12px var(--shadow-dark),
+    -6px -6px 12px var(--shadow-light),
+    inset 0 0 0 rgba(255, 255, 255, 0.1);
+}
+
+.toggle-btn.active svg {
+  color: white;
+}
+
+.toggle-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+
 
 /* 快捷字段按钮样式 */
 .quick-field-btn {
@@ -1100,6 +1231,50 @@ input, textarea, .neumorphic-input, #editor, .result-replace-input {
 .quick-field-menu::-webkit-scrollbar-thumb:hover {
   background: #8d9db3;
 }
+
+
+
+
+/* Monaco Editor 替换后的文本高亮样式 */
+.replaced-highlight {
+  background-color: #ffeb3b !important;
+  border-radius: 2px;
+  padding: 1px 0;
+  animation: highlightFade 3s ease-out;
+}
+
+@keyframes highlightFade {
+  0% {
+    background-color: #ffeb3b;
+  }
+  100% {
+    background-color: #ffeb3b;
+  }
+}
+
+/* 切换按钮样式 */
+.toggle-btn {
+  position: relative;
+}
+
+.toggle-btn.active {
+  background: linear-gradient(135deg, #48bb78, #38a169);
+  color: white;
+  box-shadow: 
+    6px 6px 12px var(--shadow-dark),
+    -6px -6px 12px var(--shadow-light),
+    inset 0 0 0 rgba(255, 255, 255, 0.1);
+}
+
+.toggle-btn.active svg {
+  color: white;
+}
+
+.toggle-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+
 
 
 
